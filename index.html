@@ -269,9 +269,12 @@ function buildDOM(){
 }
 function layout(){
   const r=table.getBoundingClientRect();W=r.width;H=r.height;
+  // Card size: midway between the full-width fit (previous layout) and the original game on iPad (~0.8 of it).
   cw=W/(10+11*0.2);ch=cw*88/63;
   const maxCh=H*0.26;if(ch>maxCh){ch=maxCh;cw=ch*63/88}
-  gap=cw*0.2;pad=Math.min(gap,14);
+  cw*=0.9;ch=cw*88/63;
+  // Columns sit almost edge to edge so the whole layout reads at a glance.
+  gap=Math.max(3,cw*0.05);pad=Math.min(cw*0.2,14);
   x0=(W-(10*cw+9*gap))/2;topY=pad;bottomY=H-ch-pad;
   table.style.setProperty('--cw',cw+'px');table.style.setProperty('--ch',ch+'px');
 }
