@@ -1,5 +1,5 @@
 // Версия приложения (SemVer). Меняйте только через: python3 project/bump.py patch|minor|major
-const VERSION='1.0.1';
+const VERSION='1.1.0';
 const CACHE='spider-'+VERSION;
 const FILES=['./','index.html','manifest.webmanifest','icon-180.png','icon-192.png','icon-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()))});

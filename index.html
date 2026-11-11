@@ -73,7 +73,15 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;paddin
 .btn.primary{background:#e3dd61;color:#1a1a1a;font-weight:600}
 .btn:focus-visible{outline:2px solid var(--hint);outline-offset:2px}
 #fx{position:fixed;inset:0;z-index:5500;pointer-events:none}
-@media (max-width:640px){.title{display:none}.tools{gap:4px 10px}.tool span{display:none}}
+.sizes{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:14px}
+.sizes>span{color:var(--muted)}
+.seg{display:flex;background:var(--tool);border-radius:16px;padding:2px}
+.seg button{min-height:28px;padding:0 12px;border-radius:14px;font-size:13px;color:rgba(255,255,255,.75)}
+.seg button[aria-pressed="true"]{background:rgba(255,255,255,.9);color:#1a1a1a;font-weight:600}
+.seg button:focus-visible{outline:2px solid var(--hint);outline-offset:1px}
+.seg b{font-weight:inherit}
+.seg .s{display:none}
+@media (max-width:640px){.title{display:none}.tools{gap:4px 10px}.tool span{display:none}.sizes>span,.seg .l{display:none}.seg .s{display:inline}}
 @media (prefers-reduced-motion:reduce){.card{transition:none}}
 </style>
 
@@ -90,6 +98,11 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;paddin
     <button class="tool" id="bRestart"><i><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v5h-5"/></svg></i><span>Начать заново</span></button>
     <button class="tool" id="bUndo"><i><svg viewBox="0 0 24 24"><path d="M9 7L4 12l5 5"/><path d="M4 12h10a5 5 0 0 1 0 10h-3"/></svg></i><span>Отменить ход</span></button>
     <button class="tool" id="bHint"><i><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/><path class="x" d="M4 3l16 18" hidden/></svg></i><span id="hintLabel">Подсказать ход</span></button>
+    <div class="sizes" role="group" aria-label="Размер карт"><span>Карты:</span><div class="seg">
+      <button data-size="s" aria-pressed="false"><b class="l">Маленькие</b><b class="s">М</b></button>
+      <button data-size="m" aria-pressed="true"><b class="l">Средние</b><b class="s">С</b></button>
+      <button data-size="l" aria-pressed="false"><b class="l">Большие</b><b class="s">Б</b></button>
+    </div></div>
   </div>
   <div id="table"></div>
 </div>
@@ -267,14 +280,21 @@ function buildDOM(){
   }
   table.appendChild(noteEl);
 }
+const SIZES={s:0.805,m:0.9,l:1}, SIZE_KEY='spider1.cardsize';
+let cardSize=(function(){const v=lsGet(SIZE_KEY);return SIZES[v]?v:'m'})();
+function setCardSize(v){
+  if(!SIZES[v])return;cardSize=v;lsSet(SIZE_KEY,v);
+  document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.size===v)));
+  relayout();
+}
 function layout(){
   const r=table.getBoundingClientRect();W=r.width;H=r.height;
-  // Card size: midway between the full-width fit (previous layout) and the original game on iPad (~0.8 of it).
+  // Card sizes: l = full-width fit, s = original game on iPad, m = midway (see SIZES).
   cw=W/(10+11*0.2);ch=cw*88/63;
   const maxCh=H*0.26;if(ch>maxCh){ch=maxCh;cw=ch*63/88}
-  cw*=0.9;ch=cw*88/63;
-  // Columns sit almost edge to edge so the whole layout reads at a glance.
-  gap=Math.max(3,cw*0.05);pad=Math.min(cw*0.2,14);
+  // Columns sit almost edge to edge; the gap stays the same for every card size.
+  gap=Math.max(3,cw*0.9*0.05);
+  cw*=SIZES[cardSize]||SIZES.m;ch=cw*88/63;pad=Math.min(cw*0.2,14);
   x0=(W-(10*cw+9*gap))/2;topY=pad;bottomY=H-ch-pad;
   table.style.setProperty('--cw',cw+'px');table.style.setProperty('--ch',ch+'px');
 }
@@ -383,6 +403,8 @@ $('bRestart').addEventListener('click',()=>{if(S.moves>0)$('mRestart').hidden=fa
 $('bRestartGo').addEventListener('click',()=>startGame(S.seed));
 $('bUndo').addEventListener('click',undo);
 $('bHint').addEventListener('click',hint);
+document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>setCardSize(b.dataset.size)));
+document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.size===cardSize)));
 $('bWinNew').addEventListener('click',()=>startGame());
 $('bWinSame').addEventListener('click',()=>startGame(S.seed));
 function showWin(best,prev){
